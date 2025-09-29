@@ -16,10 +16,31 @@ A comprehensive Laravel package that provides a global media library and Filamen
 
 ## Installation
 
-You can install the package via Composer:
+### Option 1: Install from Packagist (Recommended)
 
 ```bash
 composer require minemindmedia/laravel-mmmedia
+```
+
+### Option 2: Install directly from GitHub
+
+Add the repository to your `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/minemindmedia/laravel-mmmedia.git"
+        }
+    ]
+}
+```
+
+Then install:
+
+```bash
+composer require minemindmedia/laravel-mmmedia:dev-main
 ```
 
 Publish the configuration file:
@@ -34,6 +55,31 @@ Publish and run the migrations:
 php artisan vendor:publish --provider="Mmmedia\Media\MediaServiceProvider" --tag=media-migrations
 php artisan migrate
 ```
+
+## Quick Start
+
+1. **Add the trait to your model:**
+```php
+use Mmmedia\Media\Support\HasMediaAttachments;
+
+class Product extends Model {
+    use HasMediaAttachments;
+}
+```
+
+2. **Use MediaPicker in your Filament form:**
+```php
+use Mmmedia\Media\Filament\Forms\Components\MediaPicker;
+
+MediaPicker::make('featured_image_id')
+    ->label('Featured Image')
+    ->fieldKey('featured_image')
+    ->multiple(false)
+    ->allowUpload(true);
+```
+
+3. **Access the Media Library:**
+Visit your Filament admin panel and you'll see a new "Media" section where you can manage all media items.
 
 ## Configuration
 
