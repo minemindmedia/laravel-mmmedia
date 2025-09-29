@@ -348,3 +348,6 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 ## Support
 
 For support, please email support@minemindmedia.com or create an issue on GitHub.
+# Auto-update test
+
+<!-- Auto-update test -->
