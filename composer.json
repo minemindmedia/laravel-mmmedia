@@ -3,7 +3,12 @@
     "description": "A Laravel package providing a global media library and Filament MediaPicker field",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "filament", "media", "library", "upload"],
+    "keywords": ["laravel", "filament", "media", "library", "upload", "images", "videos", "documents"],
+    "homepage": "https://github.com/minemindmedia/laravel-mmmedia",
+    "support": {
+        "issues": "https://github.com/minemindmedia/laravel-mmmedia/issues",
+        "source": "https://github.com/minemindmedia/laravel-mmmedia"
+    },
     "authors": [
         {
             "name": "MineMind Media",
@@ -39,5 +44,11 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/minemindmedia/laravel-mmmedia.git"
+        }
+    ]
 }
