@@ -13,6 +13,9 @@ A comprehensive Laravel package that provides a global media library and Filamen
 - 🏷️ **Metadata** - Alt text, titles, captions, and custom metadata
 - 💾 **Flexible Storage** - Works with any Laravel filesystem (local, S3, etc.)
 - 🎯 **Model Integration** - Easy integration with any Eloquent model
+- 🚀 **Filament v4 Compatible** - Native support for Filament v4
+- 📚 **Spatie MediaLibrary Integration** - Works with or without Spatie MediaLibrary
+- 🖼️ **Thumbnail Generation** - Automatic thumbnail generation with Intervention Image
 
 ## Installation
 
@@ -80,6 +83,39 @@ MediaPicker::make('featured_image_id')
 
 3. **Access the Media Library:**
 Visit your Filament admin panel and you'll see a new "Media" section where you can manage all media items.
+
+## Filament v4 Compatibility
+
+This package is **natively compatible** with Filament v4! No vendor patches required.
+
+### Using with Spatie MediaLibrary
+
+If you're already using Spatie MediaLibrary, the MediaPicker will automatically detect and work with your existing media:
+
+```php
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class Product extends Model implements HasMedia
+{
+    use InteractsWithMedia;
+    
+    // MediaPicker will automatically work with your Spatie collections
+}
+```
+
+### Using with Package's Media System
+
+If you prefer to use the package's built-in media system:
+
+```php
+use Mmmedia\Media\Support\HasMediaAttachments;
+
+class Product extends Model
+{
+    use HasMediaAttachments;
+}
+```
 
 ## Configuration
 
@@ -316,6 +352,42 @@ use Mmmedia\Media\Events\MediaItemDeleted;
 Event::listen(MediaItemCreated::class, function ($mediaItem) {
     // Generate thumbnails, etc.
 });
+```
+
+## Thumbnail Generation
+
+The package supports automatic thumbnail generation using Intervention Image:
+
+### Install Intervention Image (Optional)
+
+```bash
+composer require intervention/image
+```
+
+### Generate Thumbnails
+
+```bash
+# Generate thumbnails for all media items
+php artisan media:generate-thumbnails
+
+# Force regeneration of existing thumbnails
+php artisan media:generate-thumbnails --force
+```
+
+### Custom Thumbnail Configuration
+
+You can configure thumbnail generation in `config/media.php`:
+
+```php
+'thumbnails' => [
+    'enabled' => true,
+    'sizes' => [
+        'small' => [150, 150],
+        'medium' => [300, 300],
+        'large' => [600, 600],
+    ],
+    'quality' => 80,
+],
 ```
 
 ## Testing

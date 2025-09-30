@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class MediaItem extends Model
+class MediaItem extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, HasUlids;
+    use HasFactory, SoftDeletes, HasUlids, InteractsWithMedia;
 
     protected $fillable = [
         'disk',
@@ -108,5 +111,92 @@ class MediaItem extends Model
         }
 
         return parent::delete();
+    }
+
+    /**
+     * Register media conversions for Spatie MediaLibrary
+     */
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(300)
+            ->height(300)
+            ->sharpen(10)
+            ->quality(90)
+            ->nonQueued();
+
+        $this->addMediaConversion('grid')
+            ->width(500)
+            ->height(500)
+            ->sharpen(10)
+            ->quality(90)
+            ->nonQueued();
+    }
+
+    /**
+     * Register media collections for Spatie MediaLibrary
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('default')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+    }
+
+    /**
+     * Generate thumbnail using Intervention Image (if available)
+     */
+    public function generateThumbnail(): ?string
+    {
+        if (!$this->isImage() || !class_exists(\Intervention\Image\ImageManager::class)) {
+            return null;
+        }
+
+        try {
+            $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+            $image = $manager->read(Storage::disk($this->disk)->path($this->path));
+            
+            $thumbnailPath = 'thumbnails/' . pathinfo($this->path, PATHINFO_FILENAME) . '_thumb.jpg';
+            
+            $image->resize(300, 300, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })->save(Storage::disk('public')->path($thumbnailPath), 90);
+
+            return Storage::disk('public')->url($thumbnailPath);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get thumbnail URL with fallback
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!$this->isImage()) {
+            return null;
+        }
+
+        // Try to get Spatie conversion first
+        if ($this->hasMedia('default')) {
+            $media = $this->getFirstMedia('default');
+            if ($media && $media->hasGeneratedConversion('thumb')) {
+                return $media->getUrl('thumb');
+            }
+        }
+
+        // Fallback to generated thumbnail
+        return $this->generateThumbnail() ?: $this->url;
+    }
+
+    /**
+     * Get dimensions as string
+     */
+    public function getDimensionsAttribute(): ?string
+    {
+        if ($this->width && $this->height) {
+            return "{$this->width} × {$this->height}";
+        }
+        return null;
     }
 }

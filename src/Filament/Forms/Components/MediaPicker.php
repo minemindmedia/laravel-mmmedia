@@ -9,6 +9,8 @@ use Filament\Forms\Set;
 use Illuminate\Database\Eloquent\Model;
 use Mmmedia\Media\Models\MediaItem;
 use Mmmedia\Media\Support\HasMediaAttachments;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 class MediaPicker extends Field
 {
@@ -124,10 +126,54 @@ class MediaPicker extends Field
     {
         $record = $this->getRecord();
         
-        if (!$record || !in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+        if (!$record) {
             return [];
         }
 
+        // Check if using Spatie MediaLibrary
+        if (in_array(InteractsWithMedia::class, class_uses_recursive($record))) {
+            return $this->getSpatieMediaItems($record);
+        }
+
+        // Check if using HasMediaAttachments trait
+        if (in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+            return $this->getPackageMediaItems($record);
+        }
+
+        return [];
+    }
+
+    protected function getSpatieMediaItems($record): array
+    {
+        $collection = $this->getFieldKey();
+        $mediaItems = $record->getMedia($collection);
+        
+        return $mediaItems->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'url' => $media->getUrl(),
+                'thumbnail_url' => $media->getUrl('thumb') ?: $media->getUrl(),
+                'original_name' => $media->name,
+                'mime_type' => $media->mime_type,
+                'size' => $this->formatBytes($media->size),
+                'width' => $media->getCustomProperty('width'),
+                'height' => $media->getCustomProperty('height'),
+                'alt' => $media->getCustomProperty('alt'),
+                'title' => $media->getCustomProperty('title'),
+                'caption' => $media->getCustomProperty('caption'),
+                'is_image' => str_starts_with($media->mime_type, 'image/'),
+                'is_video' => str_starts_with($media->mime_type, 'video/'),
+                'is_document' => in_array($media->mime_type, [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                ]),
+            ];
+        })->toArray();
+    }
+
+    protected function getPackageMediaItems($record): array
+    {
         $mediaItems = $record->getMedia($this->getFieldKey(), $this->getGroup());
         
         return $mediaItems->map(function (MediaItem $item) {
@@ -150,21 +196,48 @@ class MediaPicker extends Field
         })->toArray();
     }
 
+    protected function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
+
     public function getState(): mixed
     {
         $record = $this->getRecord();
         
-        if (!$record || !in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+        if (!$record) {
             return $this->multiple ? [] : null;
         }
 
-        $mediaItems = $record->getMedia($this->getFieldKey(), $this->getGroup());
-        
-        if ($this->multiple) {
-            return $mediaItems->pluck('id')->toArray();
+        // Check if using Spatie MediaLibrary
+        if (in_array(InteractsWithMedia::class, class_uses_recursive($record))) {
+            $mediaItems = $record->getMedia($this->getFieldKey());
+            
+            if ($this->multiple) {
+                return $mediaItems->pluck('id')->toArray();
+            }
+
+            return $mediaItems->first()?->id;
         }
 
-        return $mediaItems->first()?->id;
+        // Check if using HasMediaAttachments trait
+        if (in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+            $mediaItems = $record->getMedia($this->getFieldKey(), $this->getGroup());
+            
+            if ($this->multiple) {
+                return $mediaItems->pluck('id')->toArray();
+            }
+
+            return $mediaItems->first()?->id;
+        }
+
+        return $this->multiple ? [] : null;
     }
 
     public function hydrateDefaultState(): void
@@ -198,19 +271,50 @@ class MediaPicker extends Field
         $this->afterStateUpdated(function (MediaPicker $component, $state): void {
             $record = $component->getRecord();
             
-            if (!$record || !in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+            if (!$record) {
                 return;
             }
 
-            if ($component->getMultiple()) {
-                $mediaItemIds = is_array($state) ? $state : [];
-                $record->syncMedia($component->getFieldKey(), $mediaItemIds, $component->getGroup());
-            } else {
-                $mediaItemId = $state;
-                if ($mediaItemId) {
-                    $record->syncMedia($component->getFieldKey(), [$mediaItemId], $component->getGroup());
+            // Handle Spatie MediaLibrary
+            if (in_array(InteractsWithMedia::class, class_uses_recursive($record))) {
+                $collection = $component->getFieldKey();
+                
+                if ($component->getMultiple()) {
+                    $mediaIds = is_array($state) ? $state : [];
+                    $record->clearMediaCollection($collection);
+                    
+                    foreach ($mediaIds as $mediaId) {
+                        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+                        if ($media) {
+                            $media->move($record, $collection);
+                        }
+                    }
                 } else {
-                    $record->detachMedia($component->getFieldKey(), $component->getGroup());
+                    $mediaId = $state;
+                    $record->clearMediaCollection($collection);
+                    
+                    if ($mediaId) {
+                        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+                        if ($media) {
+                            $media->move($record, $collection);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Handle HasMediaAttachments trait
+            if (in_array(HasMediaAttachments::class, class_uses_recursive($record))) {
+                if ($component->getMultiple()) {
+                    $mediaItemIds = is_array($state) ? $state : [];
+                    $record->syncMedia($component->getFieldKey(), $mediaItemIds, $component->getGroup());
+                } else {
+                    $mediaItemId = $state;
+                    if ($mediaItemId) {
+                        $record->syncMedia($component->getFieldKey(), [$mediaItemId], $component->getGroup());
+                    } else {
+                        $record->detachMedia($component->getFieldKey(), $component->getGroup());
+                    }
                 }
             }
         });

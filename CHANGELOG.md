@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-01-XX
+
+### Added
+- Native Filament v4 compatibility (no vendor patches required)
+- Spatie MediaLibrary integration support
+- Automatic thumbnail generation with Intervention Image
+- Console command for generating thumbnails (`media:generate-thumbnails`)
+- Enhanced MediaPicker with dual system support
+- Custom model binding for MediaItem
+- Improved thumbnail handling with fallbacks
+
+### Fixed
+- Updated version constraints to support Laravel 12
+- Added support for Filament 4.x
+- Added support for Spatie MediaLibrary 11.x
+- Added support for Livewire 4.x
+- Fixed action namespaces for Filament v4
+- Improved MediaPicker state handling for both systems
+
 ## [1.0.1] - 2024-01-XX
 
 ### Fixed

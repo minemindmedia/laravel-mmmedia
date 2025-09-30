@@ -5,6 +5,7 @@ namespace Mmmedia\Media;
 use Illuminate\Support\ServiceProvider;
 use Mmmedia\Media\Models\MediaItem;
 use Mmmedia\Media\Models\MediaUsage;
+use Mmmedia\Media\Console\Commands\GenerateMediaThumbnails;
 
 class MediaServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,13 @@ class MediaServiceProvider extends ServiceProvider
                 ]);
             });
         }
+
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                GenerateMediaThumbnails::class,
+            ]);
+        }
     }
 
     public function register(): void
@@ -40,5 +48,10 @@ class MediaServiceProvider extends ServiceProvider
         // Bind models
         $this->app->bind(MediaItem::class);
         $this->app->bind(MediaUsage::class);
+
+        // Allow custom MediaItem model binding
+        if (class_exists(\App\Models\MediaItem::class)) {
+            $this->app->bind(MediaItem::class, \App\Models\MediaItem::class);
+        }
     }
 }
