@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2024-01-XX
+
+### Fixed
+- Fixed final Tab class import in ListMediaItems for complete Filament v4 compatibility
+- Updated to use `Filament\Schemas\Components\Tabs\Tab` for native Filament v4 support
+
+### Achievement
+- **Complete native Filament v4 compatibility achieved!**
+- **No vendor patches required!**
+
 ## [1.1.2] - 2024-01-XX
 
 ### Fixed

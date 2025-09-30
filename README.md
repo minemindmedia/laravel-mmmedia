@@ -86,7 +86,9 @@ Visit your Filament admin panel and you'll see a new "Media" section where you c
 
 ## Filament v4 Compatibility
 
-This package is **natively compatible** with Filament v4! No vendor patches required.
+This package is **100% natively compatible** with Filament v4! No vendor patches required.
+
+🎉 **Complete native Filament v4 support achieved in v1.1.3!**
 
 > **Note**: If you're using a custom MediaItem model, make sure the `generateThumbnail()` method is public to avoid visibility conflicts.
 
