@@ -88,6 +88,8 @@ Visit your Filament admin panel and you'll see a new "Media" section where you c
 
 This package is **natively compatible** with Filament v4! No vendor patches required.
 
+> **Note**: If you're using a custom MediaItem model, make sure the `generateThumbnail()` method is public to avoid visibility conflicts.
+
 ### Using with Spatie MediaLibrary
 
 If you're already using Spatie MediaLibrary, the MediaPicker will automatically detect and work with your existing media:

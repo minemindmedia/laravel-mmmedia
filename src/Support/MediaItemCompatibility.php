@@ -2,6 +2,8 @@
 
 namespace Mmmedia\Media\Support;
 
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Compatibility helper for custom MediaItem implementations
  * 
@@ -95,5 +97,32 @@ trait MediaItemCompatibility
             return "{$this->width} × {$this->height}";
         }
         return null;
+    }
+
+    /**
+     * Generate thumbnail using Intervention Image (if available)
+     * This method can be overridden in custom implementations
+     */
+    public function generateThumbnail(): ?string
+    {
+        if (!$this->isImage() || !class_exists(\Intervention\Image\ImageManager::class)) {
+            return null;
+        }
+
+        try {
+            $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+            $image = $manager->read(Storage::disk($this->disk)->path($this->path));
+            
+            $thumbnailPath = 'thumbnails/' . pathinfo($this->path, PATHINFO_FILENAME) . '_thumb.jpg';
+            
+            $image->resize(300, 300, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })->save(Storage::disk('public')->path($thumbnailPath), 90);
+
+            return Storage::disk('public')->url($thumbnailPath);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

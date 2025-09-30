@@ -103,6 +103,7 @@ class MediaItem extends Model implements HasMedia
 
     /**
      * Generate thumbnail using Intervention Image (if available)
+     * This method is public to allow custom implementations to override it
      */
     public function generateThumbnail(): ?string
     {
