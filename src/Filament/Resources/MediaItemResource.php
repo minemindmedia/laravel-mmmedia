@@ -19,9 +19,9 @@ class MediaItemResource extends Resource
 {
     protected static ?string $model = MediaItem::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static string|int|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationGroup = 'Media';
+    protected static string|int|null $navigationGroup = 'Media';
 
     protected static ?int $navigationSort = 1;
 
@@ -33,10 +33,9 @@ class MediaItemResource extends Resource
             ->schema([
                 Forms\Components\Section::make('File Information')
                     ->schema([
-                        Forms\Components\FileUpload::make('file')
+                        Forms\Components\SpatieMediaLibraryFileUpload::make('default')
                             ->label('Upload File')
-                            ->disk(config('media.disk'))
-                            ->directory(config('media.paths.images'))
+                            ->collection('default')
                             ->acceptedFileTypes(config('media.upload.allowed_mimes.image'))
                             ->maxSize(config('media.upload.max_file_size') * 1024)
                             ->image()

@@ -117,6 +117,38 @@ class Product extends Model
 }
 ```
 
+### Custom MediaItem Model
+
+If you need to customize the MediaItem model, you can create your own and disable automatic binding:
+
+```php
+// In config/media.php
+'allow_custom_model' => false,
+
+// Or in your .env file
+MEDIA_ALLOW_CUSTOM_MODEL=false
+```
+
+Then create your custom model:
+
+```php
+use Mmmedia\Media\Support\MediaItemCompatibility;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class MediaItem extends Model implements HasMedia
+{
+    use InteractsWithMedia, MediaItemCompatibility;
+    
+    // Your custom implementation
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        // Your custom thumbnail logic
+        return $this->customThumbnailMethod();
+    }
+}
+```
+
 ## Configuration
 
 The package configuration is located in `config/media.php`. Here are the key settings:

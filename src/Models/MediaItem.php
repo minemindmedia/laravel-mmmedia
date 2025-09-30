@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Mmmedia\Media\Support\MediaItemCompatibility;
 
 class MediaItem extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, HasUlids, InteractsWithMedia;
+    use HasFactory, SoftDeletes, HasUlids, InteractsWithMedia, MediaItemCompatibility;
 
     protected $fillable = [
         'disk',
@@ -59,49 +60,7 @@ class MediaItem extends Model implements HasMedia
         return Storage::disk($this->disk)->path($this->path);
     }
 
-    public function isImage(): bool
-    {
-        return str_starts_with($this->mime_type, 'image/');
-    }
 
-    public function isVideo(): bool
-    {
-        return str_starts_with($this->mime_type, 'video/');
-    }
-
-    public function isDocument(): bool
-    {
-        return in_array($this->mime_type, [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
-    }
-
-    public function getFormattedSizeAttribute(): string
-    {
-        $bytes = $this->size;
-        $units = ['B', 'KB', 'MB', 'GB'];
-        
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
-    }
-
-    public function getThumbnailUrlAttribute(): ?string
-    {
-        if (!$this->isImage()) {
-            return null;
-        }
-
-        // For now, return the original URL
-        // In a real implementation, you might want to generate thumbnails
-        return $this->url;
-    }
 
     public function delete(): bool
     {
@@ -168,35 +127,4 @@ class MediaItem extends Model implements HasMedia
         }
     }
 
-    /**
-     * Get thumbnail URL with fallback
-     */
-    public function getThumbnailUrlAttribute(): ?string
-    {
-        if (!$this->isImage()) {
-            return null;
-        }
-
-        // Try to get Spatie conversion first
-        if ($this->hasMedia('default')) {
-            $media = $this->getFirstMedia('default');
-            if ($media && $media->hasGeneratedConversion('thumb')) {
-                return $media->getUrl('thumb');
-            }
-        }
-
-        // Fallback to generated thumbnail
-        return $this->generateThumbnail() ?: $this->url;
-    }
-
-    /**
-     * Get dimensions as string
-     */
-    public function getDimensionsAttribute(): ?string
-    {
-        if ($this->width && $this->height) {
-            return "{$this->width} × {$this->height}";
-        }
-        return null;
-    }
 }

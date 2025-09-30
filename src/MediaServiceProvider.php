@@ -49,8 +49,8 @@ class MediaServiceProvider extends ServiceProvider
         $this->app->bind(MediaItem::class);
         $this->app->bind(MediaUsage::class);
 
-        // Allow custom MediaItem model binding
-        if (class_exists(\App\Models\MediaItem::class)) {
+        // Allow custom MediaItem model binding (only if enabled in config)
+        if (config('media.allow_custom_model', true) && class_exists(\App\Models\MediaItem::class)) {
             $this->app->bind(MediaItem::class, \App\Models\MediaItem::class);
         }
     }

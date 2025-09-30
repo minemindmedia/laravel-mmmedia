@@ -131,4 +131,14 @@ return [
         'enabled' => env('MEDIA_CACHE_ENABLED', true),
         'ttl' => env('MEDIA_CACHE_TTL', 3600), // seconds
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for model binding and customization.
+    |
+    */
+    'allow_custom_model' => env('MEDIA_ALLOW_CUSTOM_MODEL', true),
 ];
